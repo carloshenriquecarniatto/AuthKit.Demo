@@ -1,0 +1,1 @@
+const s="http://localhost:5080";function i(r,o,a=560){const t=new URLSearchParams;for(const[f,e]of Object.entries(o))e!==void 0&&e!==""&&t.set(f,String(e));return`<iframe src="${s}/storybook-frame/${r}?${t}" style="width:100%;height:${a}px;border:0;background:#f8fafc" title="${r}"></iframe>`}export{i as f};

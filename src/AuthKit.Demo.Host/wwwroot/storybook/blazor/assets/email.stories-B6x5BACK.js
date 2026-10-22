@@ -1,0 +1,1 @@
+import{f as e}from"./frame-yz3zX0n1.js";const a={title:"Blazor/AuthKitEmail",render:()=>e("email",{},700),parameters:{docs:{description:{component:"Email and password. Renders only the flows declared by `IAuthProvider.Capabilities`."}}}},r={},o=["Default"];export{r as Default,o as __namedExportsOrder,a as default};

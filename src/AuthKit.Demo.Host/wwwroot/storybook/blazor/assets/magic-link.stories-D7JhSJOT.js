@@ -1,0 +1,1 @@
+import{f as e}from"./frame-yz3zX0n1.js";const a={title:"Blazor/AuthKitMagicLink",render:()=>e("magic-link",{},520),parameters:{docs:{description:{component:"Passwordless link. The email lands in Mailpit while the demo stack is running."}}}},i={},n=["Default"];export{i as Default,n as __namedExportsOrder,a as default};

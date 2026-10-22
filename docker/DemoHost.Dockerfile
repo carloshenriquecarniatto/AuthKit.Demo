@@ -18,11 +18,14 @@ RUN cd AuthKit.Demo/src/angular-demo && npm ci && npm run build
 RUN cd AuthKit.Aurelia/authkit-aurelia2 && npm ci && npm run build
 RUN cd AuthKit.Demo/src/aurelia-demo && npm ci && npm run build
 
+RUN cd AuthKit.Demo/src/blazor-storybook && npm ci && npm run build
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 ENV ASPNETCORE_URLS=http://0.0.0.0:5080
 COPY --from=dotnet-build /app ./
 COPY --from=node-build /src/AuthKit.Demo/src/angular-demo/dist/angular-demo/browser ./wwwroot/angular/
 COPY --from=node-build /src/AuthKit.Demo/src/aurelia-demo/dist ./wwwroot/aurelia/
+COPY --from=node-build /src/AuthKit.Demo/src/blazor-storybook/storybook-static ./wwwroot/storybook/blazor/
 EXPOSE 5080
 ENTRYPOINT ["dotnet", "AuthKit.Demo.Host.dll"]

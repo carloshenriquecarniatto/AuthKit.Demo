@@ -1,0 +1,1 @@
+import{f as e}from"./frame-yz3zX0n1.js";const o={title:"Blazor/AuthKitResetPassword",render:()=>e("reset-password",{},520),parameters:{docs:{description:{component:"Recovery request. `UpdateMode` turns the same component into the new-password form."}}}},r={},s=["Default"];export{r as Default,s as __namedExportsOrder,o as default};

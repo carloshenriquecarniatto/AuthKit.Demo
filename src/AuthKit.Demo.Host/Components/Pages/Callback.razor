@@ -1,0 +1,13 @@
+@page "/callback"
+@inject NavigationManager Navigation
+
+<PageTitle>AuthKit · callback</PageTitle>
+
+<section class="panel">
+    <h2>Callback</h2>
+    <AuthKitCallback OnCompleted="OnCompleted" />
+</section>
+
+@code {
+    private void OnCompleted(AuthSession session) => Navigation.NavigateTo("/blazor");
+}

@@ -1,0 +1,54 @@
+@page "/"
+
+<PageTitle>AuthKit demo</PageTitle>
+
+<section class="hero">
+    <p class="eyebrow">AuthKit · demonstração local</p>
+    <h1>Uma SDK, três stacks, dois providers.</h1>
+    <p class="lead">
+        Os componentes genéricos falam com um <strong>Supabase Auth</strong> local. A federação
+        <strong>Cl@ve</strong> corre contra um gateway de teste assinado, no mesmo origin. Nenhum
+        pedido sai da tua máquina.
+    </p>
+</section>
+
+<div class="grid">
+    <a class="card" href="/blazor">
+        <h2>Blazor</h2>
+        <p>Razor: <code>AuthKitEmail</code>, <code>AuthKitMagicLink</code>, <code>AuthKitResetPassword</code> e <code>AuthKitClave</code>.</p>
+        <span class="cta">Abrir →</span>
+    </a>
+    <a class="card" href="/angular/">
+        <h2>Angular</h2>
+        <p>Standalone, signals: <code>ak-email</code>, <code>ak-magic-link</code>, <code>ak-clave</code> e o interceptor.</p>
+        <span class="cta">Abrir →</span>
+    </a>
+    <a class="card" href="/aurelia/">
+        <h2>Aurelia v2</h2>
+        <p>Plugin, cliente observável e a federação Cl@ve. Sem componentes de UI no SDK.</p>
+        <span class="cta">Abrir →</span>
+    </a>
+    <a class="card" href="/config.json">
+        <h2>Configuração</h2>
+        <p>O que as demos recebem: URL do Supabase, anon key pública e o caminho de login Cl@ve.</p>
+        <span class="cta">Ver JSON →</span>
+    </a>
+</div>
+
+<section class="panel">
+    <h2>Como o ambiente está montado</h2>
+    <table>
+        <thead><tr><th>Peça</th><th>Papel</th><th>Endereço</th></tr></thead>
+        <tbody>
+            <tr><td>Host demo (.NET)</td><td>Blazor, endpoints Cl@ve, proxy Supabase, estáticos</td><td><code>http://localhost:5080</code></td></tr>
+            <tr><td>Cl@ve stub</td><td>Pasarela de teste: pedido, identidades, asserção assinada</td><td><code>http://127.0.0.1:5081/Proxy2</code></td></tr>
+            <tr><td>Supabase gotrue</td><td>Sign up, sign in, magic link, recovery</td><td>via <code>/auth/v1</code> no host</td></tr>
+            <tr><td>Mailpit</td><td>Caixa de correio dos links</td><td><code>http://localhost:8025</code></td></tr>
+        </tbody>
+    </table>
+</section>
+
+<section class="panel">
+    <h2>Identidades de teste</h2>
+    <p>O stub apresenta cinco escolhas: DNI e NIE válidos, um CIF, uma identidade com LoA abaixo do pedido e uma assinatura feita com a chave errada. As duas últimas são recusadas pelo host, como devem ser.</p>
+</section>

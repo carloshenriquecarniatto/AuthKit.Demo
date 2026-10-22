@@ -1,0 +1,98 @@
+@page "/storybook-frame/{Component}"
+@using AuthKit.Clave
+
+<PageTitle>AuthKit story</PageTitle>
+
+<div class="story-frame" style="padding: 20px; background: #f8fafc;">
+    @switch (Component.ToLowerInvariant())
+    {
+        case "email":
+            <AuthKitEmail OnSignInComplete="Noop" />
+            break;
+        case "magic-link":
+            <AuthKitMagicLink RedirectTo="@RedirectTo" />
+            break;
+        case "reset-password":
+            <AuthKitResetPassword RedirectTo="@RedirectTo" />
+            break;
+        case "socials":
+            <AuthKitSocials Providers="SocialProviders" />
+            break;
+        case "clave":
+            <AuthKitClave Descriptor="Descriptor"
+                          Level="FixedLevel"
+                          ShowLevelSelector="ShowLevelSelector ?? true"
+                          ReturnUrl="@ReturnUrl"
+                          OnNavigate="NoopNavigate" />
+            break;
+        default:
+            <p>Unknown component: @Component</p>
+            break;
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Component { get; set; } = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "level")]
+    public string? Level { get; set; }
+
+    [SupplyParameterFromQuery(Name = "methods")]
+    public string? Methods { get; set; }
+
+    [SupplyParameterFromQuery(Name = "showLevels")]
+    public bool? ShowLevelSelector { get; set; }
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    private string RedirectTo => "/callback";
+
+    private IReadOnlyList<string> SocialProviders => ["github", "google"];
+
+    private AuthAssuranceLevel? FixedLevel =>
+        Enum.TryParse<AuthAssuranceLevel>(Level, ignoreCase: true, out var parsed) ? parsed : null;
+
+    private AuthFederationProvider Descriptor
+    {
+        get
+        {
+            var requested = (Methods ?? "clave_movil,clave_permanente,certificate")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            return new AuthFederationProvider
+            {
+                Id = "clave",
+                Kind = "clave",
+                DisplayName = "Cl@ve",
+                Description = "Federação eIDAS através do gateway de teste.",
+                Levels = [AuthAssuranceLevel.Substantial, AuthAssuranceLevel.High],
+                Methods = requested.Select(id => new AuthFederationMethod
+                {
+                    Id = id,
+                    DisplayName = id switch
+                    {
+                        ClaveMethods.Movil => "Cl@ve Móvil",
+                        ClaveMethods.Permanente => "Cl@ve Permanente",
+                        ClaveMethods.Pin => "Cl@ve PIN",
+                        ClaveMethods.Certificate => "Certificado / DNIe",
+                        _ => id
+                    },
+                    Levels = id == ClaveMethods.Certificate
+                        ? [AuthAssuranceLevel.Substantial, AuthAssuranceLevel.High]
+                        : [AuthAssuranceLevel.Substantial],
+                    Recommended = id == ClaveMethods.Movil
+                }).ToArray()
+            };
+        }
+    }
+
+    private void Noop(AuthSession session)
+    {
+    }
+
+    private void NoopNavigate(string url)
+    {
+    }
+}

@@ -1,0 +1,103 @@
+name: authkit-demo
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run scripts/up.sh first}
+    networks: [demo]
+    volumes:
+      - ./infra/db-init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  mail:
+    image: axllent/mailpit:v1.27
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - '127.0.0.1:8025:8025'
+    networks: [demo]
+
+  auth:
+    image: supabase/gotrue:v2.197.0
+    depends_on:
+      db:
+        condition: service_healthy
+      mail:
+        condition: service_started
+    ports:
+      - '127.0.0.1:54321:9999'
+    networks: [demo]
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      PORT: '9999'
+      API_EXTERNAL_URL: http://localhost:5080
+      GOTRUE_DB_DRIVER: postgres
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:?}@db:5432/postgres?search_path=auth&sslmode=disable
+      GOTRUE_DB_MIGRATIONS_PATH: /usr/local/etc/auth/migrations
+      GOTRUE_SITE_URL: http://localhost:5080
+      GOTRUE_URI_ALLOW_LIST: http://localhost:5080/*
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:?}
+      GOTRUE_JWT_EXP: '3600'
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_SMTP_HOST: mail
+      GOTRUE_SMTP_PORT: '1025'
+      GOTRUE_SMTP_ADMIN_EMAIL: demo@authkit.local
+      GOTRUE_SMTP_SENDER_NAME: AuthKit demo
+      GOTRUE_MAILER_AUTOCONFIRM: 'true'
+      GOTRUE_DISABLE_SIGNUP: 'false'
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true'
+      GOTRUE_LOG_LEVEL: warn
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:9999/health || exit 1']
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  clave-stub:
+    build:
+      context: ..
+      dockerfile: AuthKit.Demo/docker/ClaveStub.Dockerfile
+    environment:
+      CLAVE_STUB_URL: http://0.0.0.0:8080
+      CLAVE_STUB_ISSUER: http://127.0.0.1:5081/Proxy2
+      AUTHKIT_DEMO_CERTS: /certs
+    volumes:
+      - ./certs:/certs:ro
+    ports:
+      - '127.0.0.1:5081:8080'
+    networks: [demo]
+
+  host:
+    build:
+      context: ..
+      dockerfile: AuthKit.Demo/docker/DemoHost.Dockerfile
+    depends_on:
+      auth:
+        condition: service_healthy
+      clave-stub:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DEMO_ORIGIN: http://localhost:5080
+      DEMO_LISTEN: http://0.0.0.0:5080
+      AUTHKIT_DEMO_CERTS: /certs
+      SUPABASE_INTERNAL_URL: http://auth:9999
+      SUPABASE_ANON_KEY: ${ANON_KEY:?}
+      CLAVE_STUB_URL: http://127.0.0.1:5081/Proxy2
+    volumes:
+      - ./certs:/certs:ro
+    ports:
+      - '127.0.0.1:5080:5080'
+    networks: [demo]
+
+networks:
+  demo:

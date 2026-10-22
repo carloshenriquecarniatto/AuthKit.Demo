@@ -1,0 +1,156 @@
+@page "/blazor"
+@inject AuthKit.Clave.ClaveOptions Clave
+@inject AuthKit.Supabase.SupabaseAuthOptions Supabase
+@inject AuthKitOptions Ui
+@inject NavigationManager Navigation
+
+<PageTitle>AuthKit · Blazor</PageTitle>
+
+<section class="hero">
+    <p class="eyebrow">Blazor · InteractiveServer</p>
+    <h1>Componentes e parâmetros</h1>
+    <p class="lead">
+        Os componentes genéricos usam o provider Supabase registado no container. O bloco Cl@ve é
+        independente: o descritor chega como dados e o host é quem navega.
+    </p>
+</section>
+
+<section class="panel">
+    <h2>Sessão</h2>
+    <AuthorizeView>
+        <Authorized>
+            <table class="kv">
+                <tr><th>name</th><td>@context.User.FindFirst("name")?.Value</td></tr>
+                <tr><th>sub</th><td><code>@context.User.FindFirst("sub")?.Value</code></td></tr>
+                <tr><th>acr</th><td><code>@context.User.FindFirst("acr")?.Value</code></td></tr>
+                <tr><th>amr</th><td><code>@context.User.FindFirst("amr")?.Value</code></td></tr>
+                <tr><th>authkit:provider</th><td><code>@context.User.FindFirst("authkit:provider")?.Value</code></td></tr>
+                <tr><th>authkit:tenant</th><td><code>@context.User.FindFirst("authkit:tenant")?.Value</code></td></tr>
+            </table>
+            <p><a class="link-quiet" href="/logout">Terminar sessão</a></p>
+        </Authorized>
+        <NotAuthorized>
+            <p class="muted">Sem sessão do host. Inicia sessão com Supabase (abaixo) ou com Cl@ve.</p>
+        </NotAuthorized>
+    </AuthorizeView>
+</section>
+
+<section class="panel">
+    <h2>Cl@ve (eIDAS)</h2>
+    <p class="muted">
+        Cada método vem do descritor. O componente não conhece “clave_movil” nem “certificate”:
+        só desenha o que recebeu.
+    </p>
+    <div class="split">
+        <div>
+            <AuthKitClave Descriptor="ClaveDescriptor" ReturnUrl="/blazor" OnNavigate="Navigate" />
+        </div>
+        <div class="props">
+            <h3>Parâmetros de <code>AuthKitClave</code></h3>
+            <table>
+                <thead><tr><th>Parâmetro</th><th>Tipo</th><th>Neste exemplo</th></tr></thead>
+                <tbody>
+                    <tr><td><code>Descriptor</code></td><td><code>AuthFederationProvider</code></td><td>1 provider, 3 métodos</td></tr>
+                    <tr><td><code>ReturnUrl</code></td><td><code>string?</code></td><td><code>/blazor</code></td></tr>
+                    <tr><td><code>LoginPath</code></td><td><code>string</code></td><td><code>/clave/login</code></td></tr>
+                    <tr><td><code>Level</code></td><td><code>AuthAssuranceLevel?</code></td><td>livre (selector)</td></tr>
+                    <tr><td><code>ShowLevelSelector</code></td><td><code>bool</code></td><td><code>true</code></td></tr>
+                    <tr><td><code>OnNavigate</code></td><td><code>EventCallback&lt;string&gt;</code></td><td>navega o host</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Supabase</h2>
+    <p class="muted">
+        O <code>IAuthProvider</code> do container é o Supabase. As capacidades decidem o que aparece:
+        e-mail/password, magic link e recuperação.
+    </p>
+    <div class="grid-3">
+        <div class="card-static">
+            <h3>E-mail e password</h3>
+            <AuthKitEmail OnSignInComplete="OnSignedIn" />
+            <p class="hint"><code>OnSignInComplete</code> recebe <code>AuthSession</code>.</p>
+        </div>
+        <div class="card-static">
+            <h3>Magic link</h3>
+            <AuthKitMagicLink RedirectTo="@RedirectTo" />
+            <p class="hint">O link cai no <a href="http://localhost:8025" target="_blank" rel="noreferrer">Mailpit</a>.</p>
+        </div>
+        <div class="card-static">
+            <h3>Recuperação</h3>
+            <AuthKitResetPassword RedirectTo="@RedirectTo" />
+            <p class="hint"><code>RedirectTo</code> aponta para <code>/callback</code>.</p>
+        </div>
+    </div>
+    <table class="props">
+        <thead><tr><th>Componente</th><th>Parâmetros principais</th></tr></thead>
+        <tbody>
+            <tr><td><code>AuthKitEmail</code></td><td><code>OnSignInComplete</code>, <code>OnSignUpComplete</code>, <code>OnPasswordResetSent</code>, <code>RedirectTo</code>, <code>ShowConfirmPasswordField</code>, <code>MetadataFields</code>, <code>PrefilledEmail</code></td></tr>
+            <tr><td><code>AuthKitMagicLink</code></td><td><code>OnSent</code>, <code>RedirectTo</code>, <code>PrefilledEmail</code></td></tr>
+            <tr><td><code>AuthKitResetPassword</code></td><td><code>OnResetRequested</code>, <code>OnPasswordUpdated</code>, <code>RedirectTo</code>, <code>UpdateMode</code></td></tr>
+            <tr><td><code>AuthKitSocials</code></td><td><code>Providers</code>, <code>Colored</code>, <code>Variant</code>, <code>OnOAuthRequested</code></td></tr>
+        </tbody>
+    </table>
+</section>
+
+<section class="panel">
+    <h2>Configuração efetiva</h2>
+    <p class="muted">Lida das opções registadas no container, não de uma tabela à parte.</p>
+    <table class="kv">
+        <tr><th>Supabase URL</th><td><code>@Supabase.Url</code></td></tr>
+        <tr><th>Anon key</th><td><code>@Mask(Supabase.AnonKey)</code></td></tr>
+        <tr><th>Cl@ve EntityId</th><td><code>@Clave.EntityId</code></td></tr>
+        <tr><th>Cl@ve ACS</th><td><code>@Clave.AcsUrl</code></td></tr>
+        <tr><th>Gateway</th><td><code>@Clave.GatewayEndpoint</code></td></tr>
+        <tr><th>Tenant</th><td><code>@Clave.Tenant</code></td></tr>
+        <tr><th>Nível por omissão</th><td><code>@Clave.DefaultLevel</code></td></tr>
+        <tr><th>Tema</th><td><code>@Ui.Theme.Primary</code>, raio <code>@Ui.Theme.Radius</code></td></tr>
+    </table>
+</section>
+
+@code {
+    private string RedirectTo => Navigation.BaseUri + "callback";
+
+    private readonly AuthFederationProvider ClaveDescriptor = new()
+    {
+        Id = "clave",
+        Kind = "clave",
+        DisplayName = "Cl@ve",
+        Description = "Federação eIDAS através do gateway de teste.",
+        Levels = [AuthAssuranceLevel.Substantial, AuthAssuranceLevel.High],
+        Methods =
+        [
+            new AuthFederationMethod
+            {
+                Id = AuthKit.Clave.ClaveMethods.Movil,
+                DisplayName = "Cl@ve Móvil",
+                Description = "Notificação na app do cidadão",
+                Levels = [AuthAssuranceLevel.Substantial],
+                Recommended = true
+            },
+            new AuthFederationMethod
+            {
+                Id = AuthKit.Clave.ClaveMethods.Permanente,
+                DisplayName = "Cl@ve Permanente",
+                Levels = [AuthAssuranceLevel.Substantial]
+            },
+            new AuthFederationMethod
+            {
+                Id = AuthKit.Clave.ClaveMethods.Certificate,
+                DisplayName = "Certificado / DNIe",
+                Description = "Permite nível high",
+                Levels = [AuthAssuranceLevel.Substantial, AuthAssuranceLevel.High]
+            }
+        ]
+    };
+
+    private void Navigate(string url) => Navigation.NavigateTo(url, forceLoad: true);
+
+    private void OnSignedIn(AuthSession session) => Navigation.NavigateTo("/blazor");
+
+    private static string Mask(string value) =>
+        value.Length <= 12 ? value : value[..6] + "…" + value[^4..];
+}

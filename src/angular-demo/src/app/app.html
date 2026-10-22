@@ -1,0 +1,448 @@
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-row">
+      <a class="brand" href="/angular/">
+        <span class="brand-mark" aria-hidden="true">ak</span>
+        <span class="brand-text">
+          <strong>AuthKit</strong>
+          <small>for Angular</small>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="Secções">
+        <a href="#supabase">Supabase</a>
+        <a href="#clave">Cl@ve (eIDAS)</a>
+        <a href="#configuracao">Configuração</a>
+        <a href="#componentes">Componentes</a>
+      </nav>
+    </div>
+
+    <section class="session" aria-label="Sessão do host">
+      <div class="session-head">
+        <h2>Sessão do host</h2>
+        <span
+          class="badge"
+          [class.badge-on]="isAuthenticated()"
+          [class.badge-off]="!isAuthenticated()"
+        >
+          {{ sessionLoading() ? 'a carregar' : isAuthenticated() ? 'autenticado' : 'não autenticado' }}
+        </span>
+      </div>
+
+      @if (sessionError()) {
+        <p class="session-note">
+          <code>GET /session</code> falhou: {{ sessionError() }}. Confirme que o host responde em
+          <code>{{ origin }}</code>.
+        </p>
+      } @else if (sessionLoading()) {
+        <p class="session-note">A ler <code>GET /session</code> com <code>credentials: include</code>…</p>
+      } @else if (session()?.authenticated) {
+        <dl class="kv-grid">
+          <div>
+            <dt>name</dt>
+            <dd>{{ session()?.name ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt>sub</dt>
+            <dd class="mono">{{ session()?.sub ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt>acr</dt>
+            <dd class="mono" [title]="session()?.acr ?? ''">
+              <span class="tag">{{ acrLabel(session()?.acr) }}</span>
+              {{ session()?.acr ?? '—' }}
+            </dd>
+          </div>
+          <div>
+            <dt>amr</dt>
+            <dd class="mono">{{ session()?.amr ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt>provider</dt>
+            <dd class="mono">{{ session()?.provider ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt>tenant</dt>
+            <dd class="mono">{{ session()?.tenant ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt>docType</dt>
+            <dd class="mono">{{ session()?.docType ?? '—' }}</dd>
+          </div>
+        </dl>
+      } @else {
+        <p class="session-note">
+          O host respondeu <code>&#123; "authenticated": false &#125;</code>. Entre com Cl@ve em
+          baixo para criar a sessão por cookie.
+        </p>
+      }
+
+      <div class="session-actions">
+        <button type="button" class="btn" (click)="refreshSession()" [disabled]="sessionLoading()">
+          Atualizar
+        </button>
+        <button
+          type="button"
+          class="btn btn-solid"
+          (click)="logout()"
+          [disabled]="loggingOut() || !isAuthenticated()"
+        >
+          {{ loggingOut() ? 'A terminar…' : 'Terminar sessão' }}
+        </button>
+      </div>
+    </section>
+  </div>
+</header>
+
+<main class="page">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Component gallery</p>
+      <h1>AuthKit for Angular — demo</h1>
+      <p class="lead">
+        Para programadores que integram autenticação numa aplicação Angular e querem ver os
+        componentes a correr contra um host real: a mesma UI ligada a dois providers — Supabase
+        (e-mail, magic link, recuperação, OAuth) e Cl@ve (federação eIDAS iniciada pelo servidor).
+        Tudo servido pelo host de demonstração em <code>{{ origin }}</code>, na mesma origem, sem
+        CORS.
+      </p>
+    </div>
+    <ul class="chips" aria-label="Stack">
+      <li>Angular 22</li>
+      <li>standalone</li>
+      <li>&#64;authkit/angular 0.1.0</li>
+      <li>zoneless</li>
+    </ul>
+  </section>
+
+  <section id="supabase" class="card">
+    <header class="card-head">
+      <div>
+        <h2>Supabase</h2>
+        <p class="card-sub">
+          Componentes genéricos ligados com <code>provideAuthKitSupabase()</code>. O cliente usa
+          <code>{{ supabaseUrl() }}</code> e o anon key de <code>/config.json</code>; o host faz
+          proxy de <code>/auth/v1/*</code> para o gotrue local.
+        </p>
+      </div>
+    </header>
+
+    @if (!configOk()) {
+      <div class="notice notice-warn">
+        <strong>Sem configuração.</strong> {{ configError() }} Os formulários não são montados
+        porque não há provider Supabase para injetar; o resto da página continua a funcionar.
+      </div>
+    } @else {
+      <div class="tabs" role="tablist" aria-label="Componentes Supabase">
+        @for (tab of tabs; track tab.id) {
+          <button
+            type="button"
+            role="tab"
+            class="tab"
+            [class.tab-active]="supabaseTab() === tab.id"
+            [attr.aria-selected]="supabaseTab() === tab.id"
+            (click)="supabaseTab.set(tab.id)"
+          >
+            {{ tab.label }}
+          </button>
+        }
+      </div>
+
+      <div class="tab-panel" role="tabpanel">
+        @switch (supabaseTab()) {
+          @case ('email') {
+            <ak-email
+              [showConfirmPasswordField]="true"
+              (signInComplete)="onSignedIn($event)"
+              (signUpComplete)="onSignedUp()"
+              (passwordResetSent)="onResetRequested()"
+              (failed)="onFailed($event)"
+            />
+            <p class="hint">
+              A palavra-passe precisa de 8 caracteres. O modo sign-up só aparece porque o provider
+              Supabase declara <code>password</code> e <code>signUp</code>.
+            </p>
+          }
+          @case ('magic') {
+            <ak-magic-link (sentLink)="onMagicLinkSent()" (failed)="onFailed($event)" />
+            <p class="hint">
+              O link é enviado pelo gotrue; num stack local, o Inbucket mostra o e-mail.
+            </p>
+          }
+          @case ('reset') {
+            <ak-reset-password
+              (resetRequested)="onResetRequested()"
+              (failed)="onFailed($event)"
+            />
+            <p class="hint">
+              O modo <code>updateMode</code> existe para a página onde o link de recuperação aterra;
+              aqui fica desligado, por isso vê o pedido.
+            </p>
+          }
+          @case ('socials') {
+            <ak-socials />
+            <p class="hint">
+              Providers vindos de <code>socialProviders</code> no bootstrap. Sem o provider
+              habilitado no gotrue, o clique termina num erro do próprio componente. O binding
+              <code>oauthRequested</code> não está ligado, por isso o componente navega sozinho.
+            </p>
+          }
+        }
+      </div>
+
+      @if (supabaseNotice()) {
+        <div class="notice" role="status">{{ supabaseNotice() }}</div>
+      }
+
+      <p class="hint">
+        Nota: a sessão mostrada no topo é a do <strong>host</strong> (cookie definido no ACS do
+        Cl@ve), não a do Supabase, que vive em <code>sessionStorage</code> por decisão do SDK.
+      </p>
+    }
+  </section>
+
+  <section id="clave" class="card">
+    <header class="card-head">
+      <div>
+        <h2>Cl@ve (eIDAS)</h2>
+        <p class="card-sub">
+          O browser só constrói o URL do host e lê o resultado do redirect. A asserção SAML, a
+          validação e a sessão ficam no servidor — o SDK nunca recebe um token Cl@ve.
+        </p>
+      </div>
+    </header>
+
+    <div class="split">
+      <div class="demo-box">
+        <h3>Descritores reais</h3>
+        <ak-clave
+          [providers]="claveProviders"
+          [loginPath]="claveLoginPath()"
+          returnUrl="/angular/"
+          [levelLabel]="'Nível de garantia'"
+          [levelLabels]="levelLabels"
+          (navigate)="go($event)"
+        />
+        <p class="hint">
+          Cada botão emite o URL e o handler chama <code>window.location.assign(url)</code>, tal
+          como a produção faria. O nível escolhido entra como <code>loa</code>; o método, como
+          <code>method</code>.
+        </p>
+        @if (lastNavigation()) {
+          <p class="mono small break">Último URL: {{ lastNavigation() }}</p>
+        }
+      </div>
+
+      <aside class="demo-box">
+        <h3>O que acontece a seguir</h3>
+        <ol class="steps">
+          <li>
+            <code>GET {{ claveLoginPath() }}?loa=…&amp;method=…&amp;returnUrl=/angular/</code>
+            inicia a federação no host.
+          </li>
+          <li>O host redireciona para a pasarela local (stub assinado) e recebe a asserção no ACS.</li>
+          <li>O host valida, cria o cookie e devolve o utilizador a <code>/angular/</code>.</li>
+          <li>Esta página volta a ler <code>GET /session</code> e mostra a identidade no topo.</li>
+        </ol>
+        <p class="hint">
+          Falhas: o host deste demo redireciona para <code>/</code> com <code>?error=…</code>
+          (<code>FailurePath</code>), não para <code>/angular/</code>.
+        </p>
+      </aside>
+    </div>
+
+    <div class="callback-note">
+      <h3><code>&lt;ak-clave-callback&gt;</code></h3>
+      @if (hasFederationParams) {
+        <p class="hint">
+          O URL traz <code>error</code>/<code>error_reason</code>: o componente está montado e lê o
+          resultado. Não injeta <code>Router</code>, por isso funciona sem rotas.
+        </p>
+        <ak-clave-callback (completed)="onCallbackCompleted($event)" />
+        @if (callbackOutcome(); as outcome) {
+          <p class="mono small break">
+            ok={{ outcome.ok }} · error={{ outcome.error?.code ?? 'null' }} · returnUrl={{ outcome.returnUrl ?? 'null' }}
+          </p>
+        }
+      } @else {
+        <p class="hint">
+          Não montado: este URL não é um callback. O componente não depende de <code>Router</code>
+          (injeta <code>DOCUMENT</code>), por isso poderia ser renderizado sem rotas — mas em
+          qualquer página monta com <code>ok: true</code> e estaria a declarar um sucesso que não
+          aconteceu. Monta-se apenas quando o URL traz parâmetros de federação (ver
+          <code>hasFederationParams</code> em <code>src/app/app.ts</code>).
+        </p>
+      }
+    </div>
+  </section>
+
+  <section id="configuracao" class="card">
+    <header class="card-head">
+      <div>
+        <h2>Configuração</h2>
+        <p class="card-sub">
+          Valores reais desta instância, lidos de <code>/config.json</code> antes do
+          <code>bootstrapApplication</code>.
+        </p>
+      </div>
+    </header>
+
+    <table class="data-table">
+      <caption class="visually-hidden">Configuração efetiva</caption>
+      <thead>
+        <tr>
+          <th scope="col">Chave</th>
+          <th scope="col">Valor</th>
+          <th scope="col">Origem</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row"><code>supabaseUrl</code></th>
+          <td class="mono break">{{ supabaseUrl() }}</td>
+          <td><code>GET /config.json</code></td>
+        </tr>
+        <tr>
+          <th scope="row"><code>supabaseAnonKey</code></th>
+          <td class="mono break">
+            {{ maskedAnonKey() }}
+            <span class="muted">({{ anonKeyLength() }} caracteres, mascarado)</span>
+          </td>
+          <td><code>GET /config.json</code></td>
+        </tr>
+        <tr>
+          <th scope="row"><code>claveLoginPath</code></th>
+          <td class="mono">{{ claveLoginPath() }}</td>
+          <td><code>GET /config.json</code></td>
+        </tr>
+        <tr>
+          <th scope="row"><code>redirectTo</code></th>
+          <td class="mono break">{{ redirectTo }}</td>
+          <td><code>window.location.origin + '/angular/'</code></td>
+        </tr>
+        <tr>
+          <th scope="row"><code>socialProviders</code></th>
+          <td class="mono">github, google</td>
+          <td><code>src/main.ts</code></td>
+        </tr>
+        <tr>
+          <th scope="row"><code>interceptor</code></th>
+          <td class="mono">authKitInterceptor</td>
+          <td><code>provideHttpClient(withInterceptors([…]))</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    @if (!configOk()) {
+      <div class="notice notice-warn">
+        O <code>/config.json</code> não foi lido com sucesso, por isso os valores acima são
+        placeholders e a app arrancou com um provider desativado que devolve esta mensagem:
+        {{ configError() }}
+      </div>
+    }
+
+    <h3>Descritores Cl@ve</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">Descritor</th>
+          <th scope="col">Método</th>
+          <th scope="col">Níveis</th>
+          <th scope="col">Recomendado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (provider of claveProviders; track provider.id) {
+          @for (method of provider.methods; track method.id) {
+            <tr>
+              <th scope="row">
+                <code>{{ provider.id }}</code>
+                <span class="muted">{{ provider.isPrimary ? '(primário)' : '' }}</span>
+              </th>
+              <td>
+                <code>{{ method.id }}</code>
+                <span class="muted"> — {{ method.displayName }}</span>
+              </td>
+              <td class="mono">{{ method.levels.join(', ') }}</td>
+              <td>{{ method.recommended ? 'sim' : 'não' }}</td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+    <p class="hint">
+      Dois descritores de propósito: o seletor de nível só aparece quando um descritor declara mais
+      de um nível, e os métodos Cl@ve Móvil/Permanente não entregam <code>high</code>.
+    </p>
+  </section>
+
+  <section id="componentes" class="card">
+    <header class="card-head">
+      <div>
+        <h2>Componentes</h2>
+        <p class="card-sub">
+          Inputs e outputs lidos de <code>AuthKit.Angular/projects/authkit/src/lib</code>. Se o SDK
+          mudar, esta tabela muda com ele.
+        </p>
+      </div>
+    </header>
+
+    @for (doc of docs; track doc.selector) {
+      <article class="doc">
+        <header class="doc-head">
+          <h3><code>&lt;{{ doc.selector }}&gt;</code></h3>
+          <p class="muted">{{ doc.summary }}</p>
+        </header>
+
+        <h4>Inputs</h4>
+        <table class="data-table compact">
+          <thead>
+            <tr>
+              <th scope="col">Input</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Default</th>
+              <th scope="col">Descrição</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (input of doc.inputs; track input.name) {
+              <tr>
+                <th scope="row"><code>{{ input.name }}</code></th>
+                <td class="mono break">{{ input.type }}</td>
+                <td class="mono break">{{ input.defaultValue }}</td>
+                <td>{{ input.description }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <h4>Outputs</h4>
+        <table class="data-table compact">
+          <thead>
+            <tr>
+              <th scope="col">Output</th>
+              <th scope="col">Payload</th>
+              <th scope="col">Descrição</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (output of doc.outputs; track output.name) {
+              <tr>
+                <th scope="row"><code>{{ output.name }}</code></th>
+                <td class="mono break">{{ output.payload }}</td>
+                <td>{{ output.description }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </article>
+    }
+  </section>
+
+  <footer class="footer">
+    <p>
+      AuthKit demo · <code>/angular/</code> · Angular 22 standalone ·
+      <a href="https://github.com/carloshenriquecarniatto/AuthKit.Angular">AuthKit.Angular</a>
+    </p>
+  </footer>
+</main>

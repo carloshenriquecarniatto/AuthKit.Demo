@@ -1,0 +1,55 @@
+<section class="card">
+  <div class="card-head">
+    <div>
+      <h2>Sessão</h2>
+      <p class="muted">
+        O cookie do host é a fonte de verdade. Este painel lê <code>/session</code> e espelha o
+        resultado em <code>IAuthKitClient</code>.
+      </p>
+    </div>
+    <span class="pill ${signedIn ? 'ok' : ''}">${signedIn ? 'autenticado' : 'sem sessão'}</span>
+  </div>
+
+  <p class="muted" if.bind="status === 'loading'">A consultar /session…</p>
+
+  <div class="alert error" if.bind="error"><span>${error}</span></div>
+  <div class="alert notice" if.bind="notice"><span>${notice}</span></div>
+
+  <div class="two-col" if.bind="signedIn">
+    <div>
+      <h3>Claims do host</h3>
+      <dl class="facts">
+        <div repeat.for="row of facts">
+          <dt>${row.label}</dt>
+          <dd class.bind="row.mono ? 'mono' : ''">${row.value}</dd>
+        </div>
+      </dl>
+    </div>
+    <div>
+      <h3>Espelho no SDK</h3>
+      <dl class="facts">
+        <div repeat.for="row of mirrorRows">
+          <dt>${row.label}</dt>
+          <dd class="mono">${row.value}</dd>
+        </div>
+      </dl>
+      <p class="muted small">
+        Sem token no browser: a asserção foi validada no servidor. O interceptor só acrescenta
+        <code>Authorization</code> quando existe <code>session.accessToken</code>.
+      </p>
+    </div>
+  </div>
+
+  <p class="muted" if.bind="!signedIn && status === 'ready'">
+    Sem sessão. Escolha um método Cl@ve abaixo para iniciar a federação.
+  </p>
+
+  <div class="actions">
+    <button type="button" class="ghost" click.trigger="refresh()" disabled.bind="status === 'loading'">
+      ${status === 'loading' ? 'A atualizar…' : 'Atualizar /session'}
+    </button>
+    <button type="button" class="danger" click.trigger="logout()" disabled.bind="busy || !signedIn">
+      ${busy ? 'A terminar…' : 'Terminar sessão'}
+    </button>
+  </div>
+</section>

@@ -1,0 +1,29 @@
+@inherits LayoutComponentBase
+
+<header class="topbar">
+    <a class="brand" href="/">AuthKit <span>demo</span></a>
+    <nav>
+        <a href="/blazor">Blazor</a>
+        <a href="/angular/">Angular</a>
+        <a href="/aurelia/">Aurelia</a>
+        <a href="/clave/metadata">Metadata Cl@ve</a>
+        <a href="http://localhost:8025" target="_blank" rel="noreferrer">Mailpit</a>
+    </nav>
+    <AuthorizeView>
+        <Authorized>
+            <span class="badge">@context.User.FindFirst("name")?.Value</span>
+            <a class="link-quiet" href="/logout">Sair</a>
+        </Authorized>
+        <NotAuthorized>
+            <span class="badge badge-muted">sessão anónima</span>
+        </NotAuthorized>
+    </AuthorizeView>
+</header>
+
+<main class="page">
+    @Body
+</main>
+
+<footer class="footer">
+    Ambiente local. O gateway Cl@ve é um stub assinado; o Supabase é um gotrue descartável.
+</footer>

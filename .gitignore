@@ -1,0 +1,17 @@
+bin/
+obj/
+node_modules/
+dist/
+.certs/
+certs/*.pfx
+certs/*.key
+certs/*.crt
+wwwroot/demos/
+*.log
+.DS_Store
+
+.env
+storybook-static/
+src/*/storybook-static/
+wwwroot/angular/
+wwwroot/aurelia/

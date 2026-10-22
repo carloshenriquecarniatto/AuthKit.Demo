@@ -1,0 +1,14 @@
+{
+  "name": "authkit-storybook-blazor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "storybook": "storybook dev -p 6009 --no-open",
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "@storybook/html-vite": "10.6.3",
+    "storybook": "10.6.3",
+    "vite": "^7.3.7"
+  }
+}

@@ -1,4 +1,3 @@
 <Solution>
   <Project Path="src/AuthKit.Demo.Host/AuthKit.Demo.Host.csproj" />
-  <Project Path="src/AuthKit.Demo.ClaveStub/AuthKit.Demo.ClaveStub.csproj" />
 </Solution>

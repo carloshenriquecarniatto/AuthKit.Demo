@@ -1,24 +1,26 @@
 @inherits LayoutComponentBase
+@inject NavigationManager Navigation
 
 <header class="topbar">
-    <a class="brand" href="/">AuthKit <span>demo</span></a>
-    <nav>
-        <a href="/blazor">Blazor</a>
-        <a href="/angular/">Angular</a>
-        <a href="/aurelia/">Aurelia</a>
-        <a href="/storybook/blazor/">Storybook</a>
-        <a href="/clave/metadata">Metadata Cl@ve</a>
-        <a href="http://localhost:8025" target="_blank" rel="noreferrer">Mailpit</a>
-    </nav>
-    <AuthorizeView>
-        <Authorized>
-            <span class="badge">@context.User.FindFirst("name")?.Value</span>
-            <a class="link-quiet" href="/logout">Sair</a>
-        </Authorized>
-        <NotAuthorized>
-            <span class="badge badge-muted">sessão anónima</span>
-        </NotAuthorized>
-    </AuthorizeView>
+    <div class="topbar-inner">
+        <a class="brand" href="/">
+            <span class="brand-mark" aria-hidden="true">ak</span>
+            <span class="brand-text">
+                <strong>AuthKit</strong>
+                <small>demo</small>
+            </span>
+        </a>
+
+        <nav class="nav" aria-label="Demos">
+            <a href="/blazor" aria-current="@Current("/blazor")">Blazor</a>
+            <a href="/angular/" aria-current="@Current("/angular/")">Angular</a>
+            <a href="/storybook/" aria-current="@Current("/storybook/")">Storybook</a>
+        </nav>
+
+        <div class="topbar-side">
+            <a class="link-quiet" href="http://localhost:8025" target="_blank" rel="noreferrer">Mailpit</a>
+        </div>
+    </div>
 </header>
 
 <main class="page">
@@ -26,5 +28,12 @@
 </main>
 
 <footer class="footer">
-    Ambiente local. O gateway Cl@ve é um stub assinado; o Supabase é um gotrue descartável.
+    <p>Ambiente local. Supabase Auth (gotrue) descartável; nenhum pedido sai da máquina.</p>
 </footer>
+
+@code {
+    private string? Current(string path) =>
+        Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith(path.TrimStart('/'), StringComparison.OrdinalIgnoreCase)
+            ? "page"
+            : null;
+}

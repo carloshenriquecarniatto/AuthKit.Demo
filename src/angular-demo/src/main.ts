@@ -4,6 +4,7 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import {
   authKitInterceptor,
   provideAuthKit,
+  provideAuthKitMessagesFromUrl,
   provideAuthKitSupabase,
   type AuthKitUiOptions,
 } from '@authkit/angular';
@@ -66,6 +67,7 @@ async function bootstrap(): Promise<void> {
   await bootstrapApplication(App, {
     providers: [
       provideBrowserGlobalErrorListeners(),
+      provideAuthKitMessagesFromUrl('/pt.json'),
       provideHttpClient(withInterceptors([authKitInterceptor])),
       { provide: DEMO_CONFIG, useValue: state },
       ...authProviders,

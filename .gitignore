@@ -2,10 +2,6 @@ bin/
 obj/
 node_modules/
 dist/
-.certs/
-certs/*.pfx
-certs/*.key
-certs/*.crt
 wwwroot/demos/
 *.log
 .DS_Store
@@ -14,5 +10,7 @@ wwwroot/demos/
 storybook-static/
 src/*/storybook-static/
 wwwroot/angular/
-wwwroot/aurelia/
 wwwroot/storybook/
+
+src/AuthKit.Demo.Host/wwwroot/angular/
+src/AuthKit.Demo.Host/wwwroot/storybook/

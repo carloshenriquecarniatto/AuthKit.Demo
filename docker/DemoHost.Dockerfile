@@ -9,14 +9,11 @@ RUN dotnet publish AuthKit.Demo/src/AuthKit.Demo.Host/AuthKit.Demo.Host.csproj -
 FROM node:24 AS node-build
 WORKDIR /src
 COPY AuthKit.Angular/ ./AuthKit.Angular/
-COPY AuthKit.Aurelia/ ./AuthKit.Aurelia/
 COPY AuthKit.Demo/ ./AuthKit.Demo/
 
 RUN cd AuthKit.Angular && npm ci && npx ng build authkit
 RUN cd AuthKit.Demo/src/angular-demo && npm ci && npm run build
-
-RUN cd AuthKit.Aurelia/authkit-aurelia2 && npm ci && npm run build
-RUN cd AuthKit.Demo/src/aurelia-demo && npm ci && npm run build
+RUN cd AuthKit.Demo/src/angular-storybook && npm ci && npm run build
 
 RUN cd AuthKit.Demo/src/blazor-storybook && npm ci && npm run build
 
@@ -25,7 +22,8 @@ WORKDIR /app
 ENV ASPNETCORE_URLS=http://0.0.0.0:5080
 COPY --from=dotnet-build /app ./
 COPY --from=node-build /src/AuthKit.Demo/src/angular-demo/dist/angular-demo/browser ./wwwroot/angular/
-COPY --from=node-build /src/AuthKit.Demo/src/aurelia-demo/dist ./wwwroot/aurelia/
-COPY --from=node-build /src/AuthKit.Demo/src/blazor-storybook/storybook-static ./wwwroot/storybook/blazor/
+# One Storybook manager at /storybook/ (Blazor renderer) composing the Angular build.
+COPY --from=node-build /src/AuthKit.Demo/src/blazor-storybook/storybook-static ./wwwroot/storybook/
+COPY --from=node-build /src/AuthKit.Demo/src/angular-storybook/storybook-static ./wwwroot/storybook/angular/
 EXPOSE 5080
 ENTRYPOINT ["dotnet", "AuthKit.Demo.Host.dll"]

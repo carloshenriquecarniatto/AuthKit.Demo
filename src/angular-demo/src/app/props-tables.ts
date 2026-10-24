@@ -2,7 +2,7 @@
  * Component library data for the "Componentes" section.
  *
  * Every row mirrors an `@Input()` / `@Output()` in
- * AuthKit.Angular/projects/authkit/src/lib/{components,clave}/*.component.ts. When the SDK
+ * AuthKit.Angular/projects/authkit/src/lib/components/*.component.ts. When the SDK
  * changes, this file changes with it — the tables are the documentation, so a stale row is a bug.
  */
 
@@ -46,6 +46,25 @@ export const COMPONENT_DOCS: readonly ComponentDoc[] = [
         type: 'boolean',
         defaultValue: 'false',
         description: 'Mostra um segundo campo de palavra-passe no sign-up e compara os dois.',
+      },
+      {
+        name: 'showForgotPassword',
+        type: 'boolean',
+        defaultValue: 'true',
+        description: 'Mostra o link "esqueceste-te da palavra-passe?" no sign-in.',
+      },
+      {
+        name: 'showSignUp',
+        type: 'boolean',
+        defaultValue: 'true',
+        description: 'Mostra o alternador sign-in/sign-up, mesmo quando o provider suporta sign-up.',
+      },
+      {
+        name: 'labels',
+        type: 'Partial<Record<AuthMessageKey, string>>',
+        defaultValue: '{}',
+        description:
+          'Mensagens só para esta instância. Chaves em falta caem no catálogo configurado (/pt.json).',
       },
       {
         name: 'prefilledEmail',
@@ -98,6 +117,13 @@ export const COMPONENT_DOCS: readonly ComponentDoc[] = [
       'Sign-in sem palavra-passe: pede o e-mail e deixa o provider enviar o link. Mostra o estado "checkYourEmail".',
     inputs: [
       {
+        name: 'labels',
+        type: 'Partial<Record<AuthMessageKey, string>>',
+        defaultValue: '{}',
+        description:
+          'Mensagens só para esta instância; chaves em falta caem no catálogo configurado.',
+      },
+      {
         name: 'redirectTo',
         type: 'string | null',
         defaultValue: 'null',
@@ -129,6 +155,13 @@ export const COMPONENT_DOCS: readonly ComponentDoc[] = [
     summary:
       'Dois modos: pedir o e-mail de recuperação, ou definir a nova palavra-passe na página onde o link aterra.',
     inputs: [
+      {
+        name: 'labels',
+        type: 'Partial<Record<AuthMessageKey, string>>',
+        defaultValue: '{}',
+        description:
+          'Mensagens só para esta instância; chaves em falta caem no catálogo configurado.',
+      },
       {
         name: 'redirectTo',
         type: 'string | null',
@@ -174,6 +207,13 @@ export const COMPONENT_DOCS: readonly ComponentDoc[] = [
       'Um botão por provider OAuth. Sem binding em `oauthRequested` o próprio componente faz location.assign(url); com binding, a navegação passa a ser do host.',
     inputs: [
       {
+        name: 'labels',
+        type: 'Partial<Record<AuthMessageKey, string>>',
+        defaultValue: '{}',
+        description:
+          'Mensagens só para esta instância; chaves em falta caem no catálogo configurado.',
+      },
+      {
         name: 'providers',
         type: 'readonly string[] | null',
         defaultValue: 'null',
@@ -209,103 +249,6 @@ export const COMPONENT_DOCS: readonly ComponentDoc[] = [
         name: 'failed',
         payload: 'AuthError | null',
         description: 'Erro ao construir o URL de autorização.',
-      },
-    ],
-  },
-  {
-    selector: 'ak-clave',
-    title: 'Cl@ve (federação eIDAS)',
-    summary:
-      'Um controlo por método declarado no descritor, mais um seletor de nível quando o descritor declara mais de um. Constrói o URL do host; não navega nem fala com o IdP.',
-    inputs: [
-      {
-        name: 'providers',
-        type: 'readonly AuthFederationProvider[] | null',
-        defaultValue: 'null',
-        description:
-          'Descritores a renderizar. Null usa os que o provider registado declara em capabilities.federation.',
-      },
-      {
-        name: 'level',
-        type: 'AuthAssuranceLevel | null',
-        defaultValue: 'null',
-        description:
-          'Força o nível (low | substantial | high) e esconde o seletor. Null deixa o utilizador escolher.',
-      },
-      {
-        name: 'returnUrl',
-        type: 'string | null',
-        defaultValue: 'null',
-        description:
-          'Para onde o host deve devolver o utilizador. Vai como query param e é validado pelo host (same-origin).',
-      },
-      {
-        name: 'loginPath',
-        type: 'string',
-        defaultValue: "'/clave/login'",
-        description: 'Rota do host que inicia a federação (a que foi mapeada com MapClave).',
-      },
-      {
-        name: 'showLevelSelector',
-        type: 'boolean',
-        defaultValue: 'true',
-        description: 'Mostra o seletor de nível quando o descritor declara mais de um nível.',
-      },
-      {
-        name: 'levelLabel',
-        type: 'string',
-        defaultValue: "'Level of assurance'",
-        description: 'Etiqueta acima do seletor de nível.',
-      },
-      {
-        name: 'emptyMessage',
-        type: 'string',
-        defaultValue: "'No login method is available.'",
-        description: 'Mensagem quando não há descritores ou um descritor não declara métodos.',
-      },
-      {
-        name: 'levelLabels',
-        type: 'Partial<Record<AuthAssuranceLevel, string>>',
-        defaultValue: "{ low: 'Low', substantial: 'Substantial', high: 'High' }",
-        description:
-          'Etiquetas do seletor. O contrato ainda não tem chaves de mensagem para os níveis, por isso são input.',
-      },
-    ],
-    outputs: [
-      {
-        name: 'navigate',
-        payload: 'string (URL de login)',
-        description:
-          'Emitido ao clicar num método. Ligado, o componente renderiza botões; sem binding renderiza <a href> reais e funciona sem handler.',
-      },
-    ],
-  },
-  {
-    selector: 'ak-clave-callback',
-    title: 'Callback de federação',
-    summary:
-      'Lê error / error_reason do URL, limpa-os e emite o resultado. Não faz rede, não troca tokens, não navega e não injeta Router.',
-    inputs: [
-      {
-        name: 'callbackUrl',
-        type: 'string | null',
-        defaultValue: 'null',
-        description: 'URL a inspecionar. Null usa document.location.href.',
-      },
-      {
-        name: 'replaceHistory',
-        type: 'boolean',
-        defaultValue: 'false',
-        description:
-          'Substitui a entrada de histórico pelo URL limpo. Desligado por omissão: a navegação é do host.',
-      },
-    ],
-    outputs: [
-      {
-        name: 'completed',
-        payload: 'AuthKitFederationOutcome',
-        description:
-          'Emitido uma vez por montagem: { ok, error, cleanUrl, returnUrl }. O motivo cru nunca é exposto.',
       },
     ],
   },

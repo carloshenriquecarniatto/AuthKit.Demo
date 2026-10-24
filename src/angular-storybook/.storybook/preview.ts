@@ -1,9 +1,8 @@
-import type { Preview } from '@storybook/angular';
-import 'zone.js';
+import type { Preview } from '@storybook/html-vite';
 
 const preview: Preview = {
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
     controls: { expanded: true },
     docs: { toc: true },
   },

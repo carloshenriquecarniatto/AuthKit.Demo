@@ -1,29 +1,37 @@
 @page "/storybook-frame/{Component}"
-@using AuthKit.Clave
+@layout EmptyLayout
+@using System.Text.Json
+@using AuthKit.Blazor
 
 <PageTitle>AuthKit story</PageTitle>
 
-<div class="story-frame" style="padding: 20px; background: #f8fafc;">
+<div class="story-frame">
     @switch (Component.ToLowerInvariant())
     {
         case "email":
-            <AuthKitEmail OnSignInComplete="Noop" />
+            <AuthKitEmail OnSignInComplete="Noop"
+                          RedirectTo="@RedirectTo"
+                          ShowConfirmPasswordField="ShowConfirmPasswordField"
+                          ShowForgotPassword="@(ShowForgotPassword ?? true)"
+                          ShowSignUp="@(ShowSignUp ?? true)"
+                          Labels="Labels"
+                          PrefilledEmail="@PrefilledEmail" />
             break;
         case "magic-link":
-            <AuthKitMagicLink RedirectTo="@RedirectTo" />
+            <AuthKitMagicLink RedirectTo="@RedirectTo" Labels="Labels" PrefilledEmail="@PrefilledEmail" />
             break;
         case "reset-password":
-            <AuthKitResetPassword RedirectTo="@RedirectTo" />
+            <AuthKitResetPassword RedirectTo="@RedirectTo"
+                                  Labels="Labels"
+                                  PrefilledEmail="@PrefilledEmail"
+                                  UpdateMode="UpdateMode" />
             break;
         case "socials":
-            <AuthKitSocials Providers="SocialProviders" />
-            break;
-        case "clave":
-            <AuthKitClave Descriptor="Descriptor"
-                          Level="FixedLevel"
-                          ShowLevelSelector="ShowLevelSelector ?? true"
-                          ReturnUrl="@ReturnUrl"
-                          OnNavigate="NoopNavigate" />
+            <AuthKitSocials Providers="@SocialProviders"
+                            Colored="Colored"
+                            Variant="Variant"
+                            Labels="Labels"
+                            RedirectTo="@RedirectTo" />
             break;
         default:
             <p>Unknown component: @Component</p>
@@ -35,64 +43,88 @@
     [Parameter]
     public string Component { get; set; } = string.Empty;
 
-    [SupplyParameterFromQuery(Name = "level")]
-    public string? Level { get; set; }
+    [SupplyParameterFromQuery(Name = "redirectTo")]
+    public string? RedirectToQuery { get; set; }
 
-    [SupplyParameterFromQuery(Name = "methods")]
-    public string? Methods { get; set; }
+    [SupplyParameterFromQuery(Name = "showConfirmPasswordField")]
+    public bool ShowConfirmPasswordField { get; set; }
 
-    [SupplyParameterFromQuery(Name = "showLevels")]
-    public bool? ShowLevelSelector { get; set; }
+    [SupplyParameterFromQuery(Name = "prefilledEmail")]
+    public string? PrefilledEmail { get; set; }
 
-    [SupplyParameterFromQuery(Name = "returnUrl")]
-    public string? ReturnUrl { get; set; }
+    [SupplyParameterFromQuery(Name = "updateMode")]
+    public bool UpdateMode { get; set; }
 
-    private string RedirectTo => "/callback";
+    [SupplyParameterFromQuery(Name = "providers")]
+    public string? ProvidersQuery { get; set; }
 
-    private IReadOnlyList<string> SocialProviders => ["github", "google"];
+    [SupplyParameterFromQuery(Name = "colored")]
+    public bool? ColoredQuery { get; set; }
 
-    private AuthAssuranceLevel? FixedLevel =>
-        Enum.TryParse<AuthAssuranceLevel>(Level, ignoreCase: true, out var parsed) ? parsed : null;
+    [SupplyParameterFromQuery(Name = "variant")]
+    public string? VariantQuery { get; set; }
 
-    private AuthFederationProvider Descriptor
+    [SupplyParameterFromQuery(Name = "showForgotPassword")]
+    public bool? ShowForgotPassword { get; set; }
+
+    [SupplyParameterFromQuery(Name = "showSignUp")]
+    public bool? ShowSignUp { get; set; }
+
+    /// <summary>JSON object of message-key overrides, e.g. {"signIn":"Entrar agora"}.</summary>
+    [SupplyParameterFromQuery(Name = "labels")]
+    public string? LabelsJson { get; set; }
+
+    private string RedirectTo => RedirectToQuery ?? "/callback";
+
+    private bool Colored => ColoredQuery ?? true;
+
+    private AuthKitSocials.SocialButtonVariant Variant =>
+        VariantQuery switch
+        {
+            "icon" => AuthKitSocials.SocialButtonVariant.Icon,
+            _ => AuthKitSocials.SocialButtonVariant.IconAndText
+        };
+
+    private IReadOnlyList<string> SocialProviders =>
+        (ProvidersQuery ?? "github,google")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private IReadOnlyDictionary<AuthMessageKey, string>? Labels
     {
         get
         {
-            var requested = (Methods ?? "clave_movil,clave_permanente,certificate")
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-            return new AuthFederationProvider
+            if (string.IsNullOrWhiteSpace(LabelsJson))
             {
-                Id = "clave",
-                Kind = "clave",
-                DisplayName = "Cl@ve",
-                Description = "Federação eIDAS através do gateway de teste.",
-                Levels = [AuthAssuranceLevel.Substantial, AuthAssuranceLevel.High],
-                Methods = requested.Select(id => new AuthFederationMethod
+                return null;
+            }
+
+            try
+            {
+                var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(LabelsJson);
+                if (parsed is null)
                 {
-                    Id = id,
-                    DisplayName = id switch
+                    return null;
+                }
+
+                var labels = new Dictionary<AuthMessageKey, string>();
+                foreach (var (name, value) in parsed)
+                {
+                    if (Enum.TryParse<AuthMessageKey>(name, ignoreCase: true, out var key))
                     {
-                        ClaveMethods.Movil => "Cl@ve Móvil",
-                        ClaveMethods.Permanente => "Cl@ve Permanente",
-                        ClaveMethods.Pin => "Cl@ve PIN",
-                        ClaveMethods.Certificate => "Certificado / DNIe",
-                        _ => id
-                    },
-                    Levels = id == ClaveMethods.Certificate
-                        ? [AuthAssuranceLevel.Substantial, AuthAssuranceLevel.High]
-                        : [AuthAssuranceLevel.Substantial],
-                    Recommended = id == ClaveMethods.Movil
-                }).ToArray()
-            };
+                        labels[key] = value;
+                    }
+                }
+
+                return labels;
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
         }
     }
 
     private void Noop(AuthSession session)
-    {
-    }
-
-    private void NoopNavigate(string url)
     {
     }
 }

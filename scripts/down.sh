@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stops the stack and removes its volumes. The generated .env and certificates are left in place.
+# Stops the stack and removes its volumes. The generated .env is left in place.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

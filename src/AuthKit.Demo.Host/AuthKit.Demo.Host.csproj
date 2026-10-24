@@ -8,8 +8,6 @@
     <ProjectReference Include="../../../AuthKit.Net/src/dotnet/AuthKit.Core/AuthKit.Core.csproj" />
     <ProjectReference Include="../../../AuthKit.Net/src/dotnet/AuthKit.Blazor/AuthKit.Blazor.csproj" />
     <ProjectReference Include="../../../AuthKit.Net/src/dotnet/AuthKit.Supabase/AuthKit.Supabase.csproj" />
-    <ProjectReference Include="../../../AuthKit.Net/src/dotnet/AuthKit.Clave/AuthKit.Clave.csproj" />
-    <ProjectReference Include="../../../AuthKit.Net/src/dotnet/AuthKit.Clave.AspNetCore/AuthKit.Clave.AspNetCore.csproj" />
   </ItemGroup>
 
 </Project>

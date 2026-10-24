@@ -1,21 +1,19 @@
-import type { Meta, StoryObj } from '@storybook/angular';
-import { applicationConfig } from '@storybook/angular';
-import { AuthKitMagicLinkComponent, AUTH_PROVIDER } from '@authkit/angular';
-import { StoryAuthProvider } from './story-provider';
+import type { Meta, StoryObj } from '@storybook/html-vite';
+import { frame } from './frame';
+
+interface MagicLinkArgs {
+  prefilledEmail: string;
+  labels: Record<string, string>;
+}
 
 const meta = {
   title: 'Angular/AuthKitMagicLink',
-  component: AuthKitMagicLinkComponent,
-  decorators: [
-    applicationConfig({
-      providers: [{ provide: AUTH_PROVIDER, useFactory: () => new StoryAuthProvider() }],
-    }),
-  ],
-  args: { prefilledEmail: '', redirectTo: null },
+  render: (args: MagicLinkArgs) => frame('magic-link', args, 520),
   argTypes: {
     prefilledEmail: { control: 'text' },
-    redirectTo: { control: 'text' },
+    labels: { control: 'object' },
   },
+  args: { prefilledEmail: '', labels: {} },
   parameters: {
     docs: {
       description: {
@@ -23,7 +21,7 @@ const meta = {
       },
     },
   },
-} satisfies Meta<AuthKitMagicLinkComponent>;
+} satisfies Meta<MagicLinkArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -32,4 +30,8 @@ export const Default: Story = {};
 
 export const Prefilled: Story = {
   args: { prefilledEmail: 'ada@example.com' },
+};
+
+export const CustomLabels: Story = {
+  args: { labels: { email: 'E-mail de cidadão', magicLink: 'Enviar-me um link' } },
 };

@@ -62,20 +62,6 @@ services:
       timeout: 3s
       retries: 40
 
-  clave-stub:
-    build:
-      context: ..
-      dockerfile: AuthKit.Demo/docker/ClaveStub.Dockerfile
-    environment:
-      CLAVE_STUB_URL: http://0.0.0.0:8080
-      CLAVE_STUB_ISSUER: http://127.0.0.1:5081/Proxy2
-      AUTHKIT_DEMO_CERTS: /certs
-    volumes:
-      - ./certs:/certs:ro
-    ports:
-      - '127.0.0.1:5081:8080'
-    networks: [demo]
-
   host:
     build:
       context: ..
@@ -83,18 +69,12 @@ services:
     depends_on:
       auth:
         condition: service_healthy
-      clave-stub:
-        condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       DEMO_ORIGIN: http://localhost:5080
       DEMO_LISTEN: http://0.0.0.0:5080
-      AUTHKIT_DEMO_CERTS: /certs
       SUPABASE_INTERNAL_URL: http://auth:9999
       SUPABASE_ANON_KEY: ${ANON_KEY:?}
-      CLAVE_STUB_URL: http://127.0.0.1:5081/Proxy2
-    volumes:
-      - ./certs:/certs:ro
     ports:
       - '127.0.0.1:5080:5080'
     networks: [demo]

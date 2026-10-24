@@ -1,7 +1,7 @@
 namespace AuthKit.Demo.Host;
 
 /// <summary>
-/// Forwards <c>/auth/v1/*</c> to the local Supabase Auth container. Clients (Angular, Aurelia, the
+/// Forwards <c>/auth/v1/*</c> to the local Supabase Auth container. Clients (Angular, the
 /// .NET Supabase provider) all point at this host, so the browser sees one origin and no CORS
 /// configuration is needed anywhere.
 /// </summary>

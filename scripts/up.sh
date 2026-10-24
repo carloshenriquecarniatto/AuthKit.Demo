@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Builds and starts the whole demo: Supabase Auth, Mailpit, the Cl@ve stub and the .NET host
-# (which also serves the Angular and Aurelia builds). Everything is published on loopback.
+# Builds and starts the whole demo: Supabase Auth, Mailpit and the .NET host (which also serves
+# the Angular and Storybook builds). Everything is published on loopback.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -10,7 +10,6 @@ if ! docker info >/dev/null 2>&1; then
   exit 1
 fi
 
-bash "$root/scripts/gen-certs.sh"
 node "$root/scripts/demo-secrets.mjs"
 
 echo "up: building and starting the stack (the first build takes a few minutes)..."
@@ -34,10 +33,9 @@ cat <<'EOF'
 
 AuthKit demo is up:
 
-  Blazor        http://localhost:5080/
+  Blazor        http://localhost:5080/blazor
   Angular       http://localhost:5080/angular/
-  Aurelia       http://localhost:5080/aurelia/
-  Cl@ve stub    http://127.0.0.1:5081/Proxy2
+  Storybook     http://localhost:5080/storybook/
   Mailpit       http://localhost:8025
   Config        http://localhost:5080/config.json
 

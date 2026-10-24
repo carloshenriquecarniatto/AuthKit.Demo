@@ -1,38 +1,32 @@
 # AuthKit demo
 
-A runnable, local demonstration of AuthKit across the three stacks it supports, with both providers:
+A runnable, local demonstration of AuthKit on its own stacks: **Blazor** and **Angular**, both on
+**Supabase Auth**. Everything runs on one origin, `http://localhost:5080`.
 
-| Stack   | What it shows                                                                                  |
-| ------- | ---------------------------------------------------------------------------------------------- |
-| Blazor  | `AuthKitEmail`, `AuthKitMagicLink`, `AuthKitResetPassword`, `AuthKitClave` on InteractiveServer |
-| Angular | `ak-email`, `ak-magic-link`, `ak-reset-password`, `ak-clave`, the interceptor and the guard      |
-| Aurelia | the v2 plugin, the observable client and the Cl@ve federation (the SDK ships no UI components)  |
+| Surface | What it shows |
+| ------- | ------------- |
+| Blazor  | `AuthKitEmail`, `AuthKitMagicLink`, `AuthKitResetPassword`, `AuthKitSocials` on InteractiveServer |
+| Angular | `ak-email`, `ak-magic-link`, `ak-reset-password`, `ak-socials`, the interceptor and the guard |
+| Storybook | every component and every parameter that changes what it renders, with live controls |
 
-Everything runs on **one origin**, `http://localhost:5080`, with:
+There is no external service and no second origin:
 
-- **Supabase Auth** (gotrue) for the generic components: sign-up, sign-in, magic link, recovery.
-  Mail is caught by Mailpit; no external service is called.
-- **A Cl@ve stub** for the eIDAS flow: it consumes the signed `AuthnRequest`, shows test identities,
-  and posts a signed assertion back to the host's ACS. It is not the real gateway and never connects
-  to one.
-
-The .NET host also serves the Angular and Aurelia builds and proxies `/auth/v1` to gotrue, so the
-browser never needs CORS or a second origin.
+- **Supabase Auth** (gotrue) is local. Mail is caught by Mailpit.
+- The .NET host proxies `/auth/v1` to gotrue and serves the Angular build and the Storybook.
 
 ## Prerequisites
 
 - Docker (or colima) running.
-- The three SDK repositories checked out **next to this one**:
+- The two SDK repositories checked out **next to this one**:
 
 ```text
 Dev/C#/AuthKit.Net
 Dev/C#/AuthKit.Angular
-Dev/C#/AuthKit.Aurelia
 Dev/C#/AuthKit.Demo      ← this repository
 ```
 
-The .NET project references `AuthKit.Net` directly and the browser builds install
-`@authkit/angular` / `@authkit/aurelia2` from the sibling checkouts.
+The .NET project references `AuthKit.Net` directly and the Angular app installs `@authkit/angular`
+from the sibling checkout.
 
 ## Start
 
@@ -40,18 +34,17 @@ The .NET project references `AuthKit.Net` directly and the browser builds instal
 bash scripts/up.sh
 ```
 
-The first run builds four images and installs the JavaScript dependencies; it takes a few minutes.
+The first run builds the images and installs the JavaScript dependencies; it takes a few minutes.
 When it finishes:
 
-| URL                              | What                                                    |
-| -------------------------------- | ------------------------------------------------------- |
-| http://localhost:5080/           | landing page and the Blazor gallery                     |
-| http://localhost:5080/angular/   | Angular gallery                                         |
-| http://localhost:5080/aurelia/   | Aurelia gallery                                         |
-| http://localhost:5080/clave/metadata | SP metadata generated from the configuration        |
-| http://localhost:5080/config.json    | what the browser demos read (public anon key only)  |
-| http://localhost:8025            | Mailpit: magic links and recovery emails                |
-| http://127.0.0.1:5081/Proxy2     | the Cl@ve stub (reachable by the browser)               |
+| URL | What |
+| --- | ---- |
+| http://localhost:5080/ | landing page |
+| http://localhost:5080/blazor | Blazor gallery |
+| http://localhost:5080/angular/ | Angular gallery |
+| http://localhost:5080/storybook/ | one Storybook: Blazor + Angular |
+| http://localhost:5080/config.json | what the browser demos read (public anon key only) |
+| http://localhost:8025 | Mailpit: magic links and recovery emails |
 
 Stop with:
 
@@ -59,85 +52,87 @@ Stop with:
 bash scripts/down.sh
 ```
 
-`up.sh` generates throwaway certificates (`certs/`) and a per-run JWT secret and anon key (`.env`).
-Both are git-ignored. Nothing is reused between runs.
+`up.sh` generates a per-run JWT secret and anon key (`.env`), which is git-ignored. Nothing is reused
+between runs.
 
 ## What to try
-
-### Cl@ve
-
-1. Open any gallery and choose **Cl@ve Móvil** (level `substantial`) or **Certificado** (`high`).
-2. The stub page lists five identities:
-   - **María García** — valid DNI, `substantial`;
-   - **Joan Ferrer** — valid NIE, `substantial`;
-   - **Entitat Demo** — valid CIF;
-   - **nível baixo** — grants `low` while the request asked for `high`; the host must reject it
-     with `loa_not_met`;
-   - **assinatura inválida** — signs with the wrong key; the host must reject it with
-     `federation_failed`.
-3. A valid identity lands back on the gallery, which shows the claims: `name`, `acr`, `amr`,
-   `authkit:provider`, `authkit:tenant`.
-
-The rejection is deliberate: the two bad rows prove that the validation chain runs, and both return
-the same generic error so the browser cannot tell which check failed.
-
-### Supabase
 
 1. Sign up with any e-mail and a password of 8+ characters (confirmation is disabled in the stack).
 2. Sign out, then sign in with the same credentials.
 3. Request a magic link or a recovery e-mail and open it from Mailpit at http://localhost:8025.
 
-The session lives in the circuit (Blazor Server) or in the provider instance (Angular); the host
-cookie you see from Cl@ve is the server-driven session and is separate on purpose.
+The Supabase session lives where the SDK puts it (`sessionStorage`); the host is only a proxy and a
+static file server.
+
+## Storybook
+
+`/storybook/` is one manager for both stacks. The Blazor build is the manager (Blazor has no
+official Storybook renderer) and composes the Angular build as a ref:
+
+```text
+/storybook/            Blazor stories (HTML renderer, iframes into /storybook-frame/…)
+/storybook/angular/    Angular stories (HTML renderer, iframes into /angular/?story=…)
+```
+
+Every story has controls:
+
+- **Blazor** args become query parameters; the host's `StoryFrame` passes them to the real component.
+- **Angular** args become query parameters on the gallery's story mode, which renders the real
+  component with the app's Supabase provider.
+- **Labels** are a component input in both SDKs (`Labels` / `labels`), so a story can reword one
+  instance without touching the startup catalog. `ShowForgotPassword`, `ShowSignUp`,
+  `ShowConfirmPasswordField`, `UpdateMode`, `Socials` variants, etc. are component inputs too.
+
+The host serves `wwwroot/pt.json`; the Blazor components and the Angular app use it as the default
+catalog.
 
 ## How it is wired
 
 ```text
 browser ──► host :5080 ──► /auth/v1/* ──► gotrue :9999 ──► postgres
                 │
-                ├─ /clave/login ──► stub :5081 (signed AuthnRequest)
-                │                        │
-                │                        └─ signed assertion ──► /clave/acs
-                │
-                └─ /angular/, /aurelia/  (static builds)
+                ├─ /blazor, /storybook-frame/…   (Razor)
+                ├─ /angular/, /storybook/        (static builds)
+                └─ /config.json                  (URL + public anon key)
 ```
-
-- The host owns `/clave/login`, `/clave/acs` and `/clave/metadata` through `MapClave()`.
-- It never signs anyone in on behalf of AuthKit: the ACS callback is host code that calls
-  `SignInAsync` and redirects.
-- The Cl@ve signing certificate and the pinned pasarela certificate are generated by
-  `scripts/gen-certs.sh`; the host reads them from `AUTHKIT_DEMO_CERTS`.
-- `http` is allowed only because every host is loopback. The SDK validator rejects plain `http` for
-  anything else.
 
 ## Repository layout
 
 ```text
-docker-compose.yml          db, mail, auth, clave-stub, host
-docker/                     multi-stage images for the host and the stub
-infra/db-init.sql           creates the auth schema gotrue migrates into
-scripts/up.sh, down.sh      generate certs and secrets, start/stop, wait for health
-scripts/gen-certs.sh        throwaway SP, pasarela and attacker certificates
-scripts/demo-secrets.mjs    per-run JWT secret and anon key
-src/AuthKit.Demo.Host/      ASP.NET Core host: Blazor, MapClave, proxy, /session
-src/AuthKit.Demo.ClaveStub/ the Cl@ve test gateway
-src/angular-demo/           Angular gallery (built into the host image)
-src/aurelia-demo/           Aurelia gallery (built into the host image)
+docker-compose.yml              db, mail, auth, host
+docker/DemoHost.Dockerfile      .NET publish + Angular and Storybook builds
+infra/db-init.sql               creates the auth schema gotrue migrates into
+scripts/up.sh, down.sh          generate secrets, start/stop, wait for health
+scripts/demo-secrets.mjs        per-run JWT secret and anon key
+src/AuthKit.Demo.Host/          ASP.NET Core host: Blazor, proxy, static files, StoryFrame
+src/angular-demo/               Angular gallery
+src/angular-storybook/          Angular Storybook (HTML renderer + app frames)
+src/blazor-storybook/           Blazor Storybook (manager + component frames)
+src/visual-tests/               pixel-by-pixel regression check
 ```
 
-## Changing things
+## Pixel check
+
+`src/visual-tests` screenshots the pages at 1280×900 and compares them with the committed
+baselines using pixelmatch:
 
 ```bash
-# rebuild just the host after editing the .NET code
-docker compose up -d --build host
-
-# follow logs
-docker compose logs -f host clave-stub auth
-
-# reset everything, including the database
-bash scripts/down.sh && bash scripts/up.sh
+cd src/visual-tests
+npm install
+DEMO_ORIGIN=http://localhost:5080 npm run check    # exit 1 on any changed pixel
+DEMO_ORIGIN=http://localhost:5080 npm run update   # after an intended visual change
 ```
 
-The demo is not a template for production: the stub shares a directory of throwaway keys, the
-Supabase JWT secret lives in `.env`, and the host trusts a pinned self-signed certificate. Read
-`docs/clave.md` in `AuthKit.Net` before wiring a real entity.
+It is a regression check, not a design review. The baselines are machine-specific (font
+rasterisation), so regenerate them on a new machine.
+
+## Commands
+
+```bash
+docker compose logs -f host      # host logs
+docker compose logs -f auth      # gotrue logs
+bash scripts/down.sh             # stop and remove the containers
+```
+
+The demo is not a template for production: the gotrue instance is disposable, the anon key is
+printed by `/config.json`, and the database is a tmpfs.

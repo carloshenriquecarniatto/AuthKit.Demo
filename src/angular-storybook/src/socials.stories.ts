@@ -1,30 +1,36 @@
-import type { Meta, StoryObj } from '@storybook/angular';
-import { applicationConfig } from '@storybook/angular';
-import { AuthKitSocialsComponent, AUTH_PROVIDER } from '@authkit/angular';
-import { StoryAuthProvider } from './story-provider';
+import type { Meta, StoryObj } from '@storybook/html-vite';
+import { frame } from './frame';
+
+interface SocialsArgs {
+  providers: readonly string[];
+  colored: boolean;
+  variant: 'icon' | 'icon-and-text';
+  labels: Record<string, string>;
+}
 
 const meta = {
   title: 'Angular/AuthKitSocials',
-  component: AuthKitSocialsComponent,
-  decorators: [
-    applicationConfig({
-      providers: [{ provide: AUTH_PROVIDER, useFactory: () => new StoryAuthProvider() }],
-    }),
-  ],
-  args: { providers: ['github', 'google'], colored: true, variant: 'icon-and-text' },
+  render: (args: SocialsArgs) => frame('socials', args, 420),
   argTypes: {
-    providers: { control: 'object' },
+    providers: { control: 'object', description: 'Provider ids' },
     colored: { control: 'boolean' },
-    variant: { control: 'inline-radio', options: ['icon', 'icon-and-text', 'icon-text'] },
+    variant: { control: 'inline-radio', options: ['icon', 'icon-and-text'] },
+    labels: { control: 'object' },
+  },
+  args: {
+    providers: ['github', 'google'],
+    colored: true,
+    variant: 'icon-and-text',
+    labels: {},
   },
   parameters: {
     docs: {
       description: {
-        component: 'One button per provider. The stub returns a dead URL: rendering is what is on show.',
+        component: 'One button per provider declared by the provider capabilities.',
       },
     },
   },
-} satisfies Meta<AuthKitSocialsComponent>;
+} satisfies Meta<SocialsArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

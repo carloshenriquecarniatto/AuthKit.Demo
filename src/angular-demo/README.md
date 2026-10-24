@@ -1,7 +1,8 @@
 # AuthKit for Angular — demo
 
 Galeria de componentes do `@authkit/angular` (Angular 22, standalone, sem NgModule, sem router)
-servida pelo host de demonstração em `http://localhost:5080/angular/`.
+servida pelo host de demonstração em `http://localhost:5080/angular/`. O único provider é o
+Supabase Auth local.
 
 ## Comandos
 
@@ -22,63 +23,47 @@ npx ng build authkit
 
 Para iterar com o host: `npm run build`, e o host serve `src/angular-demo/dist/angular-demo/browser`
 em `/angular/`. `npm start` (dev-server) serve o mesmo conteúdo em
-`http://localhost:4200/angular/`, mas sem `/config.json`, `/session` nem `/auth/v1`: use o host
-para a demo a sério.
+`http://localhost:4200/angular/`, mas sem `/config.json` nem `/auth/v1`: use o host para a demo a
+sério.
+
+O shell visual (tokens, topbar, hero, cards, tabelas, botões) é
+`src/AuthKit.Demo.Host/wwwroot/shared/demo.css`, servido pelo host em `/shared/demo.css` e ligado no
+`index.html`. `src/styles.css` e `app.css` só têm o que é específico desta galeria; abrir o build
+sem o host mostra a página sem estilos.
 
 ## Rotas do host usadas pela app
 
 | Rota | Método | Uso |
 | --- | --- | --- |
 | `/angular/` | GET | A app (base href `/angular/`). |
-| `/config.json` | GET | `supabaseUrl`, `supabaseAnonKey`, `claveLoginPath`. Lido **antes** do bootstrap. |
-| `/session` | GET | Sessão do host (cookie): `authenticated`, `sub`, `name`, `acr`, `amr`, `provider`, `tenant`, `docType`. |
-| `/logout` | POST | Termina a sessão; 302 para `/`. |
-| `/clave/login?loa=…&method=…&returnUrl=…` | GET | Inicia a federação Cl@ve no servidor. |
+| `/config.json` | GET | `supabaseUrl` e `supabaseAnonKey`. Lido **antes** do bootstrap. |
 | `/auth/v1/*` | — | Proxy do host para o gotrue local. O cliente Supabase usa `window.location.origin`. |
+| `/pt.json` | GET | Catálogo de mensagens usado por omissão. |
 
 ## O que a página mostra
 
-1. **Cabeçalho** com a sessão do host (`GET /session`, `credentials: 'include'`), identidade
-   (`name`, `sub`, `acr`, `amr`, `provider`, `tenant`, `docType`) e logout (`POST /logout`).
-2. **Supabase**: `<ak-email>`, `<ak-magic-link>`, `<ak-reset-password>` e `<ak-socials>`, em tabs.
+1. **Supabase**: `<ak-email>`, `<ak-magic-link>`, `<ak-reset-password>` e `<ak-socials>`, em tabs.
    O provider é registado com `provideAuthKitSupabase({ url, anonKey, redirectTo })`, com
    `redirectTo = window.location.origin + '/angular/'`.
-3. **Cl@ve (eIDAS)**: `<ak-clave [providers]="claveProviders" returnUrl="/angular/"
-   (navigate)="go($event)">`, com dois descritores (`clave`, `certificado`) e os métodos
-   `clave_movil`, `clave_permanente` e `certificate`.
-4. **Configuração** e **Componentes**: a configuração efetiva e as tabelas de inputs/outputs de
-   cada componente usado, copiadas do código do SDK.
+2. **Configuração**: os valores efetivos lidos de `/config.json`.
+3. **Componentes**: tabelas de inputs/outputs de cada componente, copiadas do código do SDK.
+
+## Storybook
+
+`/angular/?story=email&…` monta **um** componente real com os providers da app, sem shell. É o frame
+que o Storybook Angular usa para os controlos; não há uma segunda implementação. Parâmetros
+suportados: `showConfirmPasswordField`, `showForgotPassword`, `showSignUp`, `prefilledEmail`,
+`updateMode`, `providers`, `colored`, `variant` e `labels` (JSON).
 
 ## Decisões
 
 - **Config primeiro.** `main.ts` faz `await loadConfig()` e só depois `bootstrapApplication`. Se o
   `/config.json` falhar, a app arranca com um `DisabledAuthProvider` que devolve a mensagem de erro
   nos próprios componentes: sem provider, os componentes rebentariam com `NullInjectorError` e a
-  página não renderizava. Nesse modo a secção Supabase mostra o aviso em vez dos formulários, e o
-  resto (Cl@ve, tabelas) continua a funcionar.
-- **`<ak-clave-callback>` só quando é callback.** O componente não injeta `Router`, por isso
-  funciona sem rotas. Mesmo assim só é montado quando o URL traz `error`/`error_reason`: montado em
-  qualquer página, emite `ok: true` para um URL que não é um callback. Ver
-  `hasFederationParams` em `src/app/app.ts`.
-- **Dois descritores Cl@ve.** O seletor de nível só aparece quando um descritor declara mais de um
-  nível, e `clave_movil`/`clave_permanente` não entregam `high`. Um descritor único ofereceria
-  `loa=high` a métodos que não o satisfazem.
-- **`preserveSymlinks: true`** em `angular.json`. O `file:` do SDK é um symlink; sem esta opção o
-  bundler resolvia `@angular/core` a partir do `node_modules` do SDK e o bundle ficava com **duas**
-  cópias do framework, o que rebenta com `NG0203` em todos os componentes (`inject()` em field
-  initializers sem contexto de injeção).
-- **`@angular/router` é dependência** ainda que a app não tenha rotas: o barrel do
-  `@authkit/angular` exporta o `authKitGuard`, que importa `Router`.
-
-## Desvios ao pedido
-
-1. **Caminho da dependência.** O spec pedido foi `"@authkit/angular":
-   "file:../../AuthKit.Angular/dist/authkit"`. A partir de `src/angular-demo` esse caminho resolve
-   para `AuthKit.Demo/AuthKit.Angular`, que não existe; o correto é
-   `file:../../../AuthKit.Angular/dist/authkit`.
-2. **`POST /logout`.** O host atual (`src/AuthKit.Demo.Host/Program.cs`) só mapeia `GET /logout`,
-   por isso um POST devolve 405. A app faz POST, como pedido, e se a resposta não for ok faz
-   fallback para uma navegação de topo para `/logout` (GET). Quando o host mapear POST, o fallback
-   deixa de ser usado.
-3. **Providers sociais.** `github` e `google` estão declarados em `src/main.ts`; se o gotrue local
-   não os tiver habilitados, o componente mostra o erro do provider em vez de navegar.
+  página não renderizava.
+- **Labels são do componente.** `labels` é um `@Input` de cada formulário e sobrepõe-se ao catálogo
+  (`/pt.json`) só naquela instância. `showForgotPassword` e `showSignUp` também são inputs.
+- **Inputs reagem.** `prefilledEmail` e `prefilledPassword` são aplicados em `ngOnChanges`; lê-los no
+  construtor via sempre o default, porque o Angular liga os inputs depois do construtor.
+- **O build assume o host.** `/shared/demo.css` e `/pt.json` são servidos pelo host; sem ele a
+  página fica sem estilos e sem catálogo (cai para inglês).

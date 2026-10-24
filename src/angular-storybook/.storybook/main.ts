@@ -1,19 +1,19 @@
-import type { StorybookConfig } from '@storybook/angular';
+import type { StorybookConfig } from '@storybook/html-vite';
 
 /**
- * Angular uses the official Storybook renderer. The other two stacks appear as composed refs:
- * Aurelia and Blazor have no official renderer, so their Storybooks use the HTML renderer and embed
- * the real components from the demo apps.
+ * The Angular gallery exposes a story mode: `/angular/?story=email&…` renders one real component
+ * with the app's providers, no shell. The stories embed that page in an iframe and turn their
+ * controls into query parameters.
+ *
+ * This is deliberately not the `@storybook/angular` renderer: that renderer mounts a wrapper whose
+ * arguments do not reach the component when a custom template is used, so controls looked live but
+ * changed nothing. A fresh iframe per args change runs the same code the gallery runs.
  */
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.ts'],
   framework: {
-    name: '@storybook/angular',
+    name: '@storybook/html-vite',
     options: {},
-  },
-  refs: {
-    aurelia: { title: 'Aurelia', url: '/storybook/aurelia' },
-    blazor: { title: 'Blazor', url: '/storybook/blazor' },
   },
   core: {
     disableTelemetry: true,

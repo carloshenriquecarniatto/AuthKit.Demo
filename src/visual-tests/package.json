@@ -1,0 +1,15 @@
+{
+  "name": "authkit-visual-tests",
+  "private": true,
+  "type": "module",
+  "description": "Pixel-by-pixel regression check for the four demo pages.",
+  "scripts": {
+    "check": "node visual.mjs",
+    "update": "node visual.mjs --update"
+  },
+  "devDependencies": {
+    "pixelmatch": "^7.1.0",
+    "playwright-core": "^1.60.0",
+    "pngjs": "^7.0.0"
+  }
+}

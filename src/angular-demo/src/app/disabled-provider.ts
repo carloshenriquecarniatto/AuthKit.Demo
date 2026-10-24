@@ -14,7 +14,6 @@ const NO_CAPABILITIES: AuthCapabilities = {
   passwordRecovery: false,
   mfa: false,
   socialProviders: [],
-  federation: [],
 };
 
 /**

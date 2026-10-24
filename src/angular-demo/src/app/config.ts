@@ -6,8 +6,6 @@ export interface DemoConfig {
   readonly supabaseUrl: string;
   /** Public anon key. Never hard-coded here: it comes from the host at runtime. */
   readonly supabaseAnonKey: string;
-  /** Host route that starts a Cl@ve federation. */
-  readonly claveLoginPath: string;
 }
 
 export type DemoConfigState =
@@ -20,7 +18,6 @@ export const DEMO_CONFIG = new InjectionToken<DemoConfigState>('DEMO_CONFIG');
 const CONFIG_URL = '/config.json';
 const CONFIG_TIMEOUT_MS = 5000;
 
-const FALLBACK_LOGIN_PATH = '/clave/login';
 
 /**
  * Reads `/config.json` before bootstrap. Never throws: a missing or broken config degrades to a
@@ -44,7 +41,6 @@ export async function loadConfig(): Promise<DemoConfigState> {
 
     const supabaseUrl = text(record['supabaseUrl']);
     const supabaseAnonKey = text(record['supabaseAnonKey']);
-    const claveLoginPath = text(record['claveLoginPath']) || FALLBACK_LOGIN_PATH;
 
     if (!supabaseUrl || !supabaseAnonKey) {
       return {
@@ -53,7 +49,7 @@ export async function loadConfig(): Promise<DemoConfigState> {
       };
     }
 
-    return { ok: true, config: { supabaseUrl, supabaseAnonKey, claveLoginPath } };
+    return { ok: true, config: { supabaseUrl, supabaseAnonKey } };
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     return { ok: false, error: `GET ${CONFIG_URL} falhou: ${reason}` };

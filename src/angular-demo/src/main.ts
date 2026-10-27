@@ -11,15 +11,17 @@ import {
 import { App } from './app/app';
 import { loadConfig, DEMO_CONFIG } from './app/config';
 import { DisabledAuthProvider } from './app/disabled-provider';
+import { StoryAuthProvider } from './app/story-provider';
 
 /** Providers offered by the local gotrue. Empty in the stack means the buttons report an error. */
 const SOCIAL_PROVIDERS: readonly string[] = ['github', 'google'];
 
 /**
- * `window.location.origin` is the host, not supersite: the Supabase client must hit `/auth/v1` on
- * the same origin so the host proxies it to gotrue and no CORS is involved.
+ * The gallery is mounted under `/angular/` on the demo host and under
+ * `/AuthKit.Demo/angular/` on GitHub Pages; `document.baseURI` is the only value that works in both.
  */
-const REDIRECT_TO = `${window.location.origin}/angular/`;
+const REDIRECT_TO = document.baseURI;
+const MESSAGES_URL = new URL('../pt.json', document.baseURI).href;
 
 const UI: AuthKitUiOptions = {
   theme: {
@@ -39,6 +41,22 @@ const UI: AuthKitUiOptions = {
 };
 
 async function bootstrap(): Promise<void> {
+  const story = new URLSearchParams(window.location.search).get('story');
+
+  // Storybook on the documentation site: one component with an in-memory provider, no network.
+  if (story) {
+    await bootstrapApplication(App, {
+      providers: [
+        provideBrowserGlobalErrorListeners(),
+        provideAuthKitMessagesFromUrl(MESSAGES_URL),
+        provideHttpClient(withInterceptors([authKitInterceptor])),
+        { provide: DEMO_CONFIG, useValue: { ok: false, error: 'Storybook frame' } },
+        provideAuthKit(new StoryAuthProvider(), UI),
+      ],
+    });
+    return;
+  }
+
   const state = await loadConfig();
 
   const authProviders = state.ok
@@ -58,7 +76,7 @@ async function bootstrap(): Promise<void> {
         // failing with a NullInjectorError inside every component.
         provideAuthKit(
           new DisabledAuthProvider(
-            `Configuração indisponível (${state.error}). Sem /config.json o provider Supabase não pode ser criado.`,
+            `Configuração indisponível (${state.error}). Sem config.json o provider Supabase não pode ser criado.`,
           ),
           UI,
         ),
@@ -67,7 +85,7 @@ async function bootstrap(): Promise<void> {
   await bootstrapApplication(App, {
     providers: [
       provideBrowserGlobalErrorListeners(),
-      provideAuthKitMessagesFromUrl('/pt.json'),
+      provideAuthKitMessagesFromUrl(MESSAGES_URL),
       provideHttpClient(withInterceptors([authKitInterceptor])),
       { provide: DEMO_CONFIG, useValue: state },
       ...authProviders,

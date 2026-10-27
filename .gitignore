@@ -14,3 +14,5 @@ wwwroot/storybook/
 
 src/AuthKit.Demo.Host/wwwroot/angular/
 src/AuthKit.Demo.Host/wwwroot/storybook/
+
+_site/

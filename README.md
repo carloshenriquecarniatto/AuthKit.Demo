@@ -55,6 +55,17 @@ bash scripts/down.sh
 `up.sh` generates a per-run JWT secret and anon key (`.env`), which is git-ignored. Nothing is reused
 between runs.
 
+## Documentation site
+
+A static documentation site is published on GitHub Pages:
+
+- https://carloshenriquecarniatto.github.io/AuthKit.Demo/
+
+It contains a landing page, the Angular gallery and a Storybook with the Angular components (an
+in-memory provider, no backend). The Blazor stories need the .NET host and stay in the Docker demo.
+The site is built by `.github/workflows/pages.yml` with `scripts/pages-build.sh`; `PAGES_BASE`
+controls the project-page prefix.
+
 ## What to try
 
 1. Sign up with any e-mail and a password of 8+ characters (confirmation is disabled in the stack).

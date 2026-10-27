@@ -1,0 +1,79 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout demo
+        uses: actions/checkout@v4
+        with:
+          path: AuthKit.Demo
+
+      - name: Checkout Angular SDK
+        uses: actions/checkout@v4
+        with:
+          repository: carloshenriquecarniatto/AuthKit.Angular
+          path: AuthKit.Angular
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            AuthKit.Angular/package-lock.json
+            AuthKit.Demo/src/angular-demo/package-lock.json
+            AuthKit.Demo/src/angular-storybook/package-lock.json
+            AuthKit.Demo/src/blazor-storybook/package-lock.json
+
+      - name: Build Angular SDK
+        working-directory: AuthKit.Angular
+        run: |
+          npm ci
+          npx ng build authkit
+
+      - name: Install demo dependencies
+        working-directory: AuthKit.Demo
+        run: |
+          (cd src/angular-demo && npm ci)
+          (cd src/angular-storybook && npm ci)
+          (cd src/blazor-storybook && npm ci)
+
+      - name: Build static site
+        working-directory: AuthKit.Demo
+        env:
+          PAGES_BASE: /${{ github.event.repository.name }}/
+        run: bash scripts/pages-build.sh
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: AuthKit.Demo/_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

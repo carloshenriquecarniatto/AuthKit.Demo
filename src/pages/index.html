@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AuthKit demo — documentação</title>
+    <meta
+      name="description"
+      content="Documentação e Storybook do AuthKit: componentes Blazor e Angular sobre Supabase Auth."
+    />
+    <link rel="stylesheet" href="shared/demo.css" />
+    <link rel="stylesheet" href="pages.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="./">
+          <span class="brand-mark" aria-hidden="true">ak</span>
+          <span class="brand-text">
+            <strong>AuthKit</strong>
+            <small>docs</small>
+          </span>
+        </a>
+        <nav class="nav" aria-label="Documentação">
+          <a href="storybook/" aria-current="page">Storybook</a>
+          <a href="angular/">Galeria Angular</a>
+          <a href="https://github.com/carloshenriquecarniatto/AuthKit.Demo">Repositório</a>
+        </nav>
+        <div class="topbar-side">
+          <span class="badge">Supabase Auth</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="hero">
+        <div class="hero-main">
+          <p class="eyebrow">AuthKit · documentação</p>
+          <h1>Componentes de autenticação, dois renderers.</h1>
+          <p class="lead">
+            Storybook com os componentes Angular a correr num provider em memória e uma galeria
+            estática. A demo completa — Blazor InteractiveServer, Supabase local, Mailpit e o host
+            .NET — corre com Docker.
+          </p>
+        </div>
+        <div class="hero-side">
+          <ul class="chips" aria-label="Stack">
+            <li>Blazor</li>
+            <li>Angular 22</li>
+            <li>Supabase Auth</li>
+            <li>Storybook</li>
+          </ul>
+        </div>
+      </section>
+
+      <div class="stack-grid">
+        <a class="stack-card" href="storybook/">
+          <h2>Storybook</h2>
+          <p>
+            Os componentes, os inputs e outputs, e todos os parâmetros que mudam o que eles
+            desenham. As stories Angular funcionam sem backend.
+          </p>
+          <span class="cta">Abrir documentação →</span>
+        </a>
+        <a class="stack-card" href="angular/">
+          <h2>Galeria Angular</h2>
+          <p>
+            A galeria estática. Sem um Supabase configurado, os formulários mostram o aviso do
+            provider desativado; o Storybook usa um provider em memória.
+          </p>
+          <span class="cta">Abrir galeria →</span>
+        </a>
+        <a class="stack-card" href="https://github.com/carloshenriquecarniatto/AuthKit.Demo">
+          <h2>Demo completa</h2>
+          <p>
+            Blazor, Angular, Storybook, gotrue, Mailpit e um host .NET numa origem só. As
+            instruções estão no README do repositório.
+          </p>
+          <span class="cta">Ver no GitHub →</span>
+        </a>
+      </div>
+
+      <section class="card">
+        <header class="card-head">
+          <div>
+            <h2>O que está nesta versão</h2>
+            <p class="card-sub">
+              O GitHub Pages serve apenas ficheiros estáticos. O Blazor InteractiveServer e o
+              proxy <code>/auth/v1</code> precisam do host .NET, por isso ficam na demo Docker.
+            </p>
+          </div>
+        </header>
+        <table class="data-table">
+          <thead>
+            <tr><th>Parte</th><th>Neste site</th><th>Na demo Docker</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Storybook Angular</td><td>Sim, com provider em memória</td><td>Sim</td></tr>
+            <tr><td>Storybook Blazor</td><td>Não — precisa do host</td><td>Sim, componentes reais</td></tr>
+            <tr><td>Galeria Angular</td><td>Sim, provider desativado sem Supabase</td><td>Sim, Supabase local</td></tr>
+            <tr><td>Galeria Blazor</td><td>Não</td><td>Sim, InteractiveServer</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <header class="card-head">
+          <div>
+            <h2>Correr a demo completa</h2>
+            <p class="card-sub">Docker, três contentores e um host .NET.</p>
+          </div>
+        </header>
+        <pre><code>git clone https://github.com/carloshenriquecarniatto/AuthKit.Demo
+git clone https://github.com/carloshenriquecarniatto/AuthKit.Net
+git clone https://github.com/carloshenriquecarniatto/AuthKit.Angular
+cd AuthKit.Demo
+bash scripts/up.sh</code></pre>
+        <p class="hint">Depois: <code>http://localhost:5080</code> e Mailpit em <code>http://localhost:8025</code>.</p>
+      </section>
+
+      <footer class="footer">
+        <p>AuthKit demo · documentação estática · <a href="https://github.com/carloshenriquecarniatto/AuthKit.Demo">código</a></p>
+      </footer>
+    </main>
+  </body>
+</html>

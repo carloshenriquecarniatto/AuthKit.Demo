@@ -15,7 +15,7 @@ export type DemoConfigState =
 /** Provided by `main.ts` after the config fetch settled, so no component sees a pending promise. */
 export const DEMO_CONFIG = new InjectionToken<DemoConfigState>('DEMO_CONFIG');
 
-const CONFIG_URL = '/config.json';
+const CONFIG_URL = new URL('../config.json', document.baseURI).href;
 const CONFIG_TIMEOUT_MS = 5000;
 
 
